@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import java.util.HashSet;
 import java.util.Set;
 
 @Entity
@@ -23,5 +24,5 @@ public class Passenger {
 
     @OneToMany(mappedBy = "passenger", cascade = CascadeType.ALL)
     @JsonIgnore
-    private Set<Reservation> reservations;
+    private Set<Reservation> reservations = new HashSet<>();
 }

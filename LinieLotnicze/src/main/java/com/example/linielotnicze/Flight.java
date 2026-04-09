@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.Set;
 
 @Entity
@@ -36,5 +37,5 @@ public class Flight {
 
     @OneToMany(mappedBy = "flight", cascade = CascadeType.ALL)
     @JsonIgnore
-    private Set<Reservation> reservations;
+    private Set<Reservation> reservations = new HashSet<>();
 }
