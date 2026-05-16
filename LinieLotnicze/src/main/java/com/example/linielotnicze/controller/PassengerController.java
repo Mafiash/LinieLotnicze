@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.linielotnicze.Passenger;
@@ -33,6 +34,11 @@ public class PassengerController {
     public Iterable<Passenger> getAllPassengers() {
         return passengerService.findAll();
     }
+    
+    @GetMapping("/search")
+    public Iterable<Passenger> findByLastName(@RequestParam String lastName) {
+        return passengerService.findByLastName(lastName);
+    }
 
     @PutMapping
     public Passenger updatePassenger(@RequestBody Passenger passenger) {
@@ -42,5 +48,20 @@ public class PassengerController {
     @DeleteMapping("/{id}")
     public void deletePassenger(@PathVariable Long id) {
         passengerService.deleteById(id);
+    }
+    
+    @GetMapping("/search/name-or")
+    public Iterable<Passenger> getPassengersByNameOr(@RequestParam String firstName, @RequestParam String lastName) {
+        return passengerService.findByFirstOrLastName(firstName, lastName);
+    }
+
+    @GetMapping("/search/email")
+    public Iterable<Passenger> getPassengersByEmailDomain(@RequestParam String emailFragment) {
+        return passengerService.findByEmailFragment(emailFragment);
+    }
+
+    @GetMapping("/sorted")
+    public Iterable<Passenger> getAllPassengersSorted() {
+        return passengerService.findAllSortedByLastName();
     }
 }

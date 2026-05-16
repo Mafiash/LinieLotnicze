@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.linielotnicze.Flight;
@@ -42,5 +43,35 @@ public class FlightController {
     @DeleteMapping("/{id}")
     public void deleteFlight(@PathVariable Long id) {
         flightService.deleteById(id);
+    }
+    
+    @GetMapping("/search/destination")
+    public Iterable<Flight> getFlightsByDestination(@RequestParam String city) {
+        return flightService.findByDestinationCity(city);
+    }
+    
+    @GetMapping("/search/origin")
+    public Iterable<Flight> getFlightsByOrigin(@RequestParam String city) {
+        return flightService.findByOriginCity(city);
+    }
+    
+    @GetMapping("/search/route")
+    public Iterable<Flight> getRoute(@RequestParam String origin, @RequestParam String destination) {
+        return flightService.findRoute(origin, destination);
+    }
+    
+    @GetMapping("/search/number")
+    public Flight getFlightByNumber(@RequestParam String flightNumber) {
+        return flightService.findByFlightNumber(flightNumber);
+    }
+
+    @GetMapping("/sorted")
+    public Iterable<Flight> getAllFlightsSorted() {
+        return flightService.findAllSortedByDeparture();
+    }
+
+    @GetMapping("/search/destination/sorted")
+    public Iterable<Flight> getFlightsToCitySorted(@RequestParam String city) {
+        return flightService.findFlightsToCitySorted(city);
     }
 }

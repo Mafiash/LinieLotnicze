@@ -1,4 +1,6 @@
 package com.example.linielotnicze.service;
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -25,5 +27,21 @@ public class AirportService {
 
     public void deleteById(Long id) {
         airportRepo.deleteById(id);
+    }
+    
+    public Airport findByCode(String code) {
+        return airportRepo.findByCode(code);
+    }
+
+    public List<Airport> findByCity(String city) {
+        return airportRepo.findByCity(city);
+    }
+
+    public List<Airport> findAllSortedByCity() {
+        return airportRepo.findAllByOrderByCityAsc();
+    }
+
+    public List<Airport> findByNameFragment(String nameFragment) {
+        return airportRepo.findByNameContainingIgnoreCase(nameFragment);
     }
 }

@@ -1,4 +1,6 @@
 package com.example.linielotnicze.service;
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -25,5 +27,21 @@ public class PassengerService {
 
     public void deleteById(Long id) {
         passengerRepo.deleteById(id);
+    }
+    
+    public List<Passenger> findByLastName(String lastName) {
+        return passengerRepo.findByLastName(lastName);
+    }
+    
+    public List<Passenger> findByFirstOrLastName(String firstName, String lastName) {
+        return passengerRepo.findByFirstNameOrLastName(firstName, lastName);
+    }
+
+    public List<Passenger> findByEmailFragment(String emailFragment) {
+        return passengerRepo.findByEmailContainingIgnoreCase(emailFragment);
+    }
+
+    public List<Passenger> findAllSortedByLastName() {
+        return passengerRepo.findAllByOrderByLastNameAsc();
     }
 }

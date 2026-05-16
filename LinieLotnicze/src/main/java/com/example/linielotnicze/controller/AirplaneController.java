@@ -7,7 +7,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
 import com.example.linielotnicze.Airplane;
 import com.example.linielotnicze.service.AirplaneService;
 
@@ -41,5 +43,25 @@ public class AirplaneController {
     @DeleteMapping("/{id}")
     public void deleteAirplane(@PathVariable Long id) {
         airplaneService.deleteById(id);
+    }
+    
+    @GetMapping("/search/capacity")
+    public Iterable<Airplane> getLargePlanes(@RequestParam Integer minCapacity) {
+        return airplaneService.findLargePlanes(minCapacity);
+    }
+    
+    @GetMapping("/search/model")
+    public Iterable<Airplane> getPlanesByModel(@RequestParam String modelFragment) {
+        return airplaneService.findByModelFragment(modelFragment);
+    }
+
+    @GetMapping("/sorted-by-capacity")
+    public Iterable<Airplane> getPlanesSortedByCapacity() {
+        return airplaneService.findAllSortedByCapacityDesc();
+    }
+
+    @GetMapping("/search/capacity-range")
+    public Iterable<Airplane> getPlanesByCapacityRange(@RequestParam Integer min, @RequestParam Integer max) {
+        return airplaneService.findByCapacityRange(min, max);
     }
 }

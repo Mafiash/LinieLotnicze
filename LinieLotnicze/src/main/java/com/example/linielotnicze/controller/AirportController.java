@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.linielotnicze.Airport;
@@ -43,5 +44,25 @@ public class AirportController {
     @DeleteMapping("/{id}")
     public void deleteAirport(@PathVariable Long id) {
         airportService.deleteById(id);
+    }
+    
+    @GetMapping("/search/code")
+    public Airport getAirportByCode(@RequestParam String code) {
+        return airportService.findByCode(code);
+    }
+
+    @GetMapping("/search/city")
+    public Iterable<Airport> getAirportsByCity(@RequestParam String city) {
+        return airportService.findByCity(city);
+    }
+
+    @GetMapping("/sorted-by-city")
+    public Iterable<Airport> getAllAirportsSorted() {
+        return airportService.findAllSortedByCity();
+    }
+
+    @GetMapping("/search/name")
+    public Iterable<Airport> getAirportsByName(@RequestParam String nameFragment) {
+        return airportService.findByNameFragment(nameFragment);
     }
 }
