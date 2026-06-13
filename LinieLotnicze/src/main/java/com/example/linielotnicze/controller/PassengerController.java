@@ -64,4 +64,11 @@ public class PassengerController {
     public Iterable<Passenger> getAllPassengersSorted() {
         return passengerService.findAllSortedByLastName();
     }
+    
+    @GetMapping("/{id}/hateoas")
+    public com.example.linielotnicze.dto.PassengerDTO getPassengerHateoas(@PathVariable Long id) {
+        Passenger p = passengerService.findById(id);
+        if (p == null) throw new java.util.NoSuchElementException("Brak pasazera o podanym ID");
+        return new com.example.linielotnicze.dto.PassengerDTO(p);
+    }
 }

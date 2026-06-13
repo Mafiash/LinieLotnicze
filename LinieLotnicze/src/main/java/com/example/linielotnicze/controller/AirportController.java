@@ -65,4 +65,11 @@ public class AirportController {
     public Iterable<Airport> getAirportsByName(@RequestParam String nameFragment) {
         return airportService.findByNameFragment(nameFragment);
     }
+    
+    @GetMapping("/{id}/hateoas")
+    public com.example.linielotnicze.dto.AirportDTO getAirportHateoas(@PathVariable Long id) {
+        Airport a = airportService.findById(id);
+        if (a == null) throw new java.util.NoSuchElementException("Brak lotniska o podanym ID");
+        return new com.example.linielotnicze.dto.AirportDTO(a);
+    }
 }

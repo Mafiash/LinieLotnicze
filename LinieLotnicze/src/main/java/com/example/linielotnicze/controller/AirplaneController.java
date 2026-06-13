@@ -64,4 +64,11 @@ public class AirplaneController {
     public Iterable<Airplane> getPlanesByCapacityRange(@RequestParam Integer min, @RequestParam Integer max) {
         return airplaneService.findByCapacityRange(min, max);
     }
+    
+    @GetMapping("/{id}/hateoas")
+    public com.example.linielotnicze.dto.AirplaneDTO getAirplaneHateoas(@PathVariable Long id) {
+        Airplane a = airplaneService.findById(id);
+        if (a == null) throw new java.util.NoSuchElementException("Brak samolotu o podanym ID");
+        return new com.example.linielotnicze.dto.AirplaneDTO(a);
+    }
 }

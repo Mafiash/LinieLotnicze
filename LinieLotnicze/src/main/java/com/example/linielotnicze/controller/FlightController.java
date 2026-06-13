@@ -74,4 +74,32 @@ public class FlightController {
     public Iterable<Flight> getFlightsToCitySorted(@RequestParam String city) {
         return flightService.findFlightsToCitySorted(city);
     }
+
+    @GetMapping("/{id}/airplane")
+    public Object getAirplaneForFlight(@PathVariable Long id) {
+        Flight f = flightService.findById(id);
+        if (f == null) throw new java.util.NoSuchElementException("Brak lotu o podanym ID");
+        return f.getAirplane();
+    }
+
+    @GetMapping("/{id}/origin")
+    public Object getOriginForFlight(@PathVariable Long id) {
+        Flight f = flightService.findById(id);
+        if (f == null) throw new java.util.NoSuchElementException("Brak lotu o podanym ID");
+        return f.getOrigin();
+    }
+
+    @GetMapping("/{id}/destination")
+    public Object getDestinationForFlight(@PathVariable Long id) {
+        Flight f = flightService.findById(id);
+        if (f == null) throw new java.util.NoSuchElementException("Brak lotu o podanym ID");
+        return f.getDestination();
+    }
+
+    @GetMapping("/{id}/hateoas")
+    public com.example.linielotnicze.dto.FlightDTO getFlightHateoas(@PathVariable Long id) {
+        Flight f = flightService.findById(id);
+        if (f == null) throw new java.util.NoSuchElementException("Brak lotu o podanym ID");
+        return new com.example.linielotnicze.dto.FlightDTO(f);
+    }
 }

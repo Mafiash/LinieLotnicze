@@ -79,4 +79,25 @@ public class ReservationController {
     public Iterable<Reservation> getReservationsByFlightSorted(@RequestParam String flightNumber) {
         return reservationService.findByFlightSortedBySeat(flightNumber);
     }
+    
+    @GetMapping("/{id}/passenger")
+    public Object getPassengerForReservation(@PathVariable Long id) {
+        Reservation r = reservationService.findById(id);
+        if (r == null) throw new java.util.NoSuchElementException("Brak rezerwacji");
+        return r.getPassenger();
+    }
+
+    @GetMapping("/{id}/flight")
+    public Object getFlightForReservation(@PathVariable Long id) {
+        Reservation r = reservationService.findById(id);
+        if (r == null) throw new java.util.NoSuchElementException("Brak rezerwacji");
+        return r.getFlight();
+    }
+
+    @GetMapping("/{id}/hateoas")
+    public com.example.linielotnicze.dto.ReservationDTO getReservationHateoas(@PathVariable Long id) {
+        Reservation r = reservationService.findById(id);
+        if (r == null) throw new java.util.NoSuchElementException("Brak rezerwacji");
+        return new com.example.linielotnicze.dto.ReservationDTO(r);
+    }
 }
