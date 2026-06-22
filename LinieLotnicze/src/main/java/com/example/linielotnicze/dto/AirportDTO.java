@@ -22,8 +22,8 @@ public class AirportDTO extends RepresentationModel<AirportDTO> {
 
         this.add(linkTo(methodOn(AirportController.class).getAirportHateoas(id)).withSelfRel());
         
-        this.add(linkTo(methodOn(FlightController.class).getFlightsByOrigin(city)).withRel("departures"));
-        this.add(linkTo(methodOn(FlightController.class).getFlightsByDestination(city)).withRel("arrivals"));
+        this.add(linkTo(methodOn(FlightController.class).searchFlights(null, city, null)).withRel("departures"));
+        this.add(linkTo(methodOn(FlightController.class).searchFlights(null, null, city)).withRel("arrivals"));
     }
 
     public Long getId() { return id; }
