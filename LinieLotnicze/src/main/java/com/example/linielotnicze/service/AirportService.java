@@ -1,18 +1,21 @@
 package com.example.linielotnicze.service;
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.example.linielotnicze.Airport;
 import com.example.linielotnicze.repository.AirportRepository;
 
 @Service
+@RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class AirportService {
 
-    @Autowired
-    AirportRepository airportRepo;
+    private final AirportRepository airportRepo;
 
+    @Transactional
     public Airport save(Airport airport) {
         return airportRepo.save(airport);
     }
@@ -25,6 +28,7 @@ public class AirportService {
         return airportRepo.findAll();
     }
 
+    @Transactional
     public void deleteById(Long id) {
         airportRepo.deleteById(id);
     }

@@ -1,75 +1,80 @@
 package com.example.linielotnicze.controller;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-
 import com.example.linielotnicze.Airport;
+import com.example.linielotnicze.dto.AirportDTO;
+import com.example.linielotnicze.exception.ResourceNotFoundException;
 import com.example.linielotnicze.service.AirportService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+
+import java.net.URI;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 @RestController
-@RequestMapping("/airport")
+@RequestMapping("/airports")
+@RequiredArgsConstructor
 public class AirportController {
 
-    @Autowired
-    AirportService airportService;
+    private final AirportService airportService;
 
     @PostMapping
-    public Airport addAirport(@RequestBody Airport airport) {
-        return airportService.save(airport);
+    public ResponseEntity<AirportDTO> addAirport(@RequestBody Airport airport) {
+        Airport saved = airportService.save(airport);
+        URI location = ServletUriComponentsBuilder.fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(saved.getId())
+                .toUri();
+        return ResponseEntity.created(location).body(new AirportDTO(saved));
     }
 
     @GetMapping("/{id}")
-    public Airport getAirport(@PathVariable Long id) {
-        return airportService.findById(id);
+    public AirportDTO getAirport(@PathVariable Long id) {
+        Airport a = airportService.findById(id);
+        if (a == null) {
+            throw new ResourceNotFoundException("Brak lotniska o podanym ID");
+        }
+        return new AirportDTO(a);
     }
 
     @GetMapping
-    public Iterable<Airport> getAllAirports() {
-        return airportService.findAll();
+    public Iterable<AirportDTO> getAirports(
+            @RequestParam(required = false) String code,
+            @RequestParam(required = false) String city,
+            @RequestParam(required = false) String nameFragment,
+            @RequestParam(required = false) String sortBy
+    ) {
+        Iterable<Airport> airports;
+        if (code != null) {
+            Airport a = airportService.findByCode(code);
+            airports = a != null ? java.util.List.of(a) : java.util.List.of();
+        } else if (city != null) {
+            airports = airportService.findByCity(city);
+        } else if (nameFragment != null) {
+            airports = airportService.findByNameFragment(nameFragment);
+        } else if ("city".equalsIgnoreCase(sortBy)) {
+            airports = airportService.findAllSortedByCity();
+        } else {
+            airports = airportService.findAll();
+        }
+
+        return StreamSupport.stream(airports.spliterator(), false)
+                .map(AirportDTO::new)
+                .collect(Collectors.toList());
     }
 
-    @PutMapping
-    public Airport updateAirport(@RequestBody Airport airport) {
-        return airportService.save(airport);
+    @PutMapping("/{id}")
+    public ResponseEntity<AirportDTO> updateAirport(@PathVariable Long id, @RequestBody Airport airport) {
+        airport.setId(id);
+        Airport updated = airportService.save(airport);
+        return ResponseEntity.ok(new AirportDTO(updated));
     }
 
     @DeleteMapping("/{id}")
-    public void deleteAirport(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteAirport(@PathVariable Long id) {
         airportService.deleteById(id);
-    }
-    
-    @GetMapping("/search/code")
-    public Airport getAirportByCode(@RequestParam String code) {
-        return airportService.findByCode(code);
-    }
-
-    @GetMapping("/search/city")
-    public Iterable<Airport> getAirportsByCity(@RequestParam String city) {
-        return airportService.findByCity(city);
-    }
-
-    @GetMapping("/sorted-by-city")
-    public Iterable<Airport> getAllAirportsSorted() {
-        return airportService.findAllSortedByCity();
-    }
-
-    @GetMapping("/search/name")
-    public Iterable<Airport> getAirportsByName(@RequestParam String nameFragment) {
-        return airportService.findByNameFragment(nameFragment);
-    }
-    
-    @GetMapping("/{id}/hateoas")
-    public com.example.linielotnicze.dto.AirportDTO getAirportHateoas(@PathVariable Long id) {
-        Airport a = airportService.findById(id);
-        if (a == null) throw new java.util.NoSuchElementException("Brak lotniska o podanym ID");
-        return new com.example.linielotnicze.dto.AirportDTO(a);
+        return ResponseEntity.noContent().build();
     }
 }

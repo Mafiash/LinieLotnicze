@@ -17,7 +17,7 @@ public class AirplaneDTO extends RepresentationModel<AirplaneDTO> {
         this.model = airplane.getModel();
         this.capacity = airplane.getCapacity();
 
-        this.add(linkTo(methodOn(AirplaneController.class).getAirplaneHateoas(id)).withSelfRel());
+        this.add(linkTo(methodOn(AirplaneController.class).getAirplane(id)).withSelfRel());
     }
 
     public Long getId() { return id; }

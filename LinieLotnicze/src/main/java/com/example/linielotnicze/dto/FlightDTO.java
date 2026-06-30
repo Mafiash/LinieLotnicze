@@ -26,7 +26,7 @@ public class FlightDTO extends RepresentationModel<FlightDTO> {
         this.add(linkTo(methodOn(FlightController.class).getOriginForFlight(id)).withRel("origin"));
         this.add(linkTo(methodOn(FlightController.class).getDestinationForFlight(id)).withRel("destination"));
         
-        this.add(linkTo(methodOn(FlightController.class).getFlightHateoas(id)).withSelfRel());
+        this.add(linkTo(methodOn(FlightController.class).getFlight(id)).withSelfRel());
     }
 
     public Long getId() { return id; }

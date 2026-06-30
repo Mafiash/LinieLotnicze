@@ -1,74 +1,79 @@
 package com.example.linielotnicze.controller;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
 
 import com.example.linielotnicze.Passenger;
+import com.example.linielotnicze.dto.PassengerDTO;
+import com.example.linielotnicze.exception.ResourceNotFoundException;
 import com.example.linielotnicze.service.PassengerService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+
+import java.net.URI;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 @RestController
-@RequestMapping("/passenger")
+@RequestMapping("/passengers")
+@RequiredArgsConstructor
 public class PassengerController {
 
-    @Autowired
-    PassengerService passengerService;
+    private final PassengerService passengerService;
 
     @PostMapping
-    public Passenger addPassenger(@RequestBody Passenger passenger) {
-        return passengerService.save(passenger);
+    public ResponseEntity<PassengerDTO> addPassenger(@RequestBody Passenger passenger) {
+        Passenger saved = passengerService.save(passenger);
+        URI location = ServletUriComponentsBuilder.fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(saved.getId())
+                .toUri();
+        return ResponseEntity.created(location).body(new PassengerDTO(saved));
     }
 
     @GetMapping("/{id}")
-    public Passenger getPassenger(@PathVariable Long id) {
-        return passengerService.findById(id);
+    public PassengerDTO getPassenger(@PathVariable Long id) {
+        Passenger p = passengerService.findById(id);
+        if (p == null) {
+            throw new ResourceNotFoundException("Brak pasazera o podanym ID");
+        }
+        return new PassengerDTO(p);
     }
 
     @GetMapping
-    public Iterable<Passenger> getAllPassengers() {
-        return passengerService.findAll();
-    }
-    
-    @GetMapping("/search")
-    public Iterable<Passenger> findByLastName(@RequestParam String lastName) {
-        return passengerService.findByLastName(lastName);
+    public Iterable<PassengerDTO> getPassengers(
+            @RequestParam(required = false) String firstName,
+            @RequestParam(required = false) String lastName,
+            @RequestParam(required = false) String emailFragment,
+            @RequestParam(required = false) String sortBy
+    ) {
+        Iterable<Passenger> passengers;
+        if (firstName != null && lastName != null) {
+            passengers = passengerService.findByFirstOrLastName(firstName, lastName);
+        } else if (lastName != null) {
+            passengers = passengerService.findByLastName(lastName);
+        } else if (emailFragment != null) {
+            passengers = passengerService.findByEmailFragment(emailFragment);
+        } else if ("lastName".equalsIgnoreCase(sortBy)) {
+            passengers = passengerService.findAllSortedByLastName();
+        } else {
+            passengers = passengerService.findAll();
+        }
+
+        return StreamSupport.stream(passengers.spliterator(), false)
+                .map(PassengerDTO::new)
+                .collect(Collectors.toList());
     }
 
-    @PutMapping
-    public Passenger updatePassenger(@RequestBody Passenger passenger) {
-        return passengerService.save(passenger);
+    @PutMapping("/{id}")
+    public ResponseEntity<PassengerDTO> updatePassenger(@PathVariable Long id, @RequestBody Passenger passenger) {
+        passenger.setId(id);
+        Passenger updated = passengerService.save(passenger);
+        return ResponseEntity.ok(new PassengerDTO(updated));
     }
 
     @DeleteMapping("/{id}")
-    public void deletePassenger(@PathVariable Long id) {
+    public ResponseEntity<Void> deletePassenger(@PathVariable Long id) {
         passengerService.deleteById(id);
-    }
-    
-    @GetMapping("/search/name-or")
-    public Iterable<Passenger> getPassengersByNameOr(@RequestParam String firstName, @RequestParam String lastName) {
-        return passengerService.findByFirstOrLastName(firstName, lastName);
-    }
-
-    @GetMapping("/search/email")
-    public Iterable<Passenger> getPassengersByEmailDomain(@RequestParam String emailFragment) {
-        return passengerService.findByEmailFragment(emailFragment);
-    }
-
-    @GetMapping("/sorted")
-    public Iterable<Passenger> getAllPassengersSorted() {
-        return passengerService.findAllSortedByLastName();
-    }
-    
-    @GetMapping("/{id}/hateoas")
-    public com.example.linielotnicze.dto.PassengerDTO getPassengerHateoas(@PathVariable Long id) {
-        Passenger p = passengerService.findById(id);
-        if (p == null) throw new java.util.NoSuchElementException("Brak pasazera o podanym ID");
-        return new com.example.linielotnicze.dto.PassengerDTO(p);
+        return ResponseEntity.noContent().build();
     }
 }
