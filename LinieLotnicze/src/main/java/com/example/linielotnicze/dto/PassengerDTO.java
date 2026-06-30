@@ -20,8 +20,8 @@ public class PassengerDTO extends RepresentationModel<PassengerDTO> {
         this.lastName = passenger.getLastName();
         this.email = passenger.getEmail();
 
-        this.add(linkTo(methodOn(PassengerController.class).getPassengerHateoas(id)).withSelfRel());
-        this.add(linkTo(methodOn(ReservationController.class).getReservationsByEmail(email)).withRel("reservations"));
+        this.add(linkTo(methodOn(PassengerController.class).getPassenger(id)).withSelfRel());
+        this.add(linkTo(methodOn(ReservationController.class).getReservations(null, null, email, null, null, null)).withRel("reservations"));
     }
 
     public Long getId() { return id; }

@@ -1,105 +1,125 @@
 package com.example.linielotnicze.controller;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
 
 import com.example.linielotnicze.Flight;
+import com.example.linielotnicze.dto.FlightDTO;
+import com.example.linielotnicze.dto.AirplaneDTO;
+import com.example.linielotnicze.dto.AirportDTO;
+import com.example.linielotnicze.exception.ResourceNotFoundException;
 import com.example.linielotnicze.service.FlightService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+
+import java.net.URI;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 @RestController
-@RequestMapping("/flight")
+@RequestMapping("/flights")
+@RequiredArgsConstructor
 public class FlightController {
 
-    @Autowired
-    FlightService flightService;
+    private final FlightService flightService;
 
     @PostMapping
-    public Flight addFlight(@RequestBody Flight flight) {
-        return flightService.save(flight);
+    public ResponseEntity<FlightDTO> addFlight(@RequestBody Flight flight) {
+        Flight saved = flightService.save(flight);
+        URI location = ServletUriComponentsBuilder.fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(saved.getId())
+                .toUri();
+        return ResponseEntity.created(location).body(new FlightDTO(saved));
     }
 
     @GetMapping("/{id}")
-    public Flight getFlight(@PathVariable Long id) {
-        return flightService.findById(id);
+    public FlightDTO getFlight(@PathVariable Long id) {
+        Flight f = flightService.findById(id);
+        if (f == null) {
+            throw new ResourceNotFoundException("Brak lotu o podanym ID");
+        }
+        return new FlightDTO(f);
     }
 
     @GetMapping
-    public Iterable<Flight> getAllFlights() {
-        return flightService.findAll();
+    public Iterable<FlightDTO> getFlights(
+            @RequestParam(required = false) String origin,
+            @RequestParam(required = false) String destination,
+            @RequestParam(required = false) String flightNumber,
+            @RequestParam(required = false) String sortBy
+    ) {
+        Iterable<Flight> flights;
+        if (origin != null && destination != null) {
+            flights = flightService.findRoute(origin, destination);
+        } else if (origin != null) {
+            flights = flightService.findByOriginCity(origin);
+        } else if (destination != null) {
+            if ("departureTime".equalsIgnoreCase(sortBy)) {
+                flights = flightService.findFlightsToCitySorted(destination);
+            } else {
+                flights = flightService.findByDestinationCity(destination);
+            }
+        } else if (flightNumber != null) {
+            Flight f = flightService.findByFlightNumber(flightNumber);
+            flights = f != null ? List.of(f) : List.of();
+        } else if ("departureTime".equalsIgnoreCase(sortBy)) {
+            flights = flightService.findAllSortedByDeparture();
+        } else {
+            flights = flightService.findAll();
+        }
+
+        return StreamSupport.stream(flights.spliterator(), false)
+                .map(FlightDTO::new)
+                .collect(Collectors.toList());
     }
 
-    @PutMapping
-    public Flight updateFlight(@RequestBody Flight flight) {
-        return flightService.save(flight);
+    @PutMapping("/{id}")
+    public ResponseEntity<FlightDTO> updateFlight(@PathVariable Long id, @RequestBody Flight flight) {
+        flight.setId(id);
+        Flight updated = flightService.save(flight);
+        return ResponseEntity.ok(new FlightDTO(updated));
     }
 
     @DeleteMapping("/{id}")
-    public void deleteFlight(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteFlight(@PathVariable Long id) {
         flightService.deleteById(id);
-    }
-    
-    @GetMapping("/search/destination")
-    public Iterable<Flight> getFlightsByDestination(@RequestParam String city) {
-        return flightService.findByDestinationCity(city);
-    }
-    
-    @GetMapping("/search/origin")
-    public Iterable<Flight> getFlightsByOrigin(@RequestParam String city) {
-        return flightService.findByOriginCity(city);
-    }
-    
-    @GetMapping("/search/route")
-    public Iterable<Flight> getRoute(@RequestParam String origin, @RequestParam String destination) {
-        return flightService.findRoute(origin, destination);
-    }
-    
-    @GetMapping("/search/number")
-    public Flight getFlightByNumber(@RequestParam String flightNumber) {
-        return flightService.findByFlightNumber(flightNumber);
-    }
-
-    @GetMapping("/sorted")
-    public Iterable<Flight> getAllFlightsSorted() {
-        return flightService.findAllSortedByDeparture();
-    }
-
-    @GetMapping("/search/destination/sorted")
-    public Iterable<Flight> getFlightsToCitySorted(@RequestParam String city) {
-        return flightService.findFlightsToCitySorted(city);
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/{id}/airplane")
-    public Object getAirplaneForFlight(@PathVariable Long id) {
+    public AirplaneDTO getAirplaneForFlight(@PathVariable Long id) {
         Flight f = flightService.findById(id);
-        if (f == null) throw new java.util.NoSuchElementException("Brak lotu o podanym ID");
-        return f.getAirplane();
+        if (f == null) {
+            throw new ResourceNotFoundException("Brak lotu o podanym ID");
+        }
+        if (f.getAirplane() == null) {
+            throw new ResourceNotFoundException("Brak samolotu przypisanego do tego lotu");
+        }
+        return new AirplaneDTO(f.getAirplane());
     }
 
     @GetMapping("/{id}/origin")
-    public Object getOriginForFlight(@PathVariable Long id) {
+    public AirportDTO getOriginForFlight(@PathVariable Long id) {
         Flight f = flightService.findById(id);
-        if (f == null) throw new java.util.NoSuchElementException("Brak lotu o podanym ID");
-        return f.getOrigin();
+        if (f == null) {
+            throw new ResourceNotFoundException("Brak lotu o podanym ID");
+        }
+        if (f.getOrigin() == null) {
+            throw new ResourceNotFoundException("Brak lotniska odlotu dla tego lotu");
+        }
+        return new AirportDTO(f.getOrigin());
     }
 
     @GetMapping("/{id}/destination")
-    public Object getDestinationForFlight(@PathVariable Long id) {
+    public AirportDTO getDestinationForFlight(@PathVariable Long id) {
         Flight f = flightService.findById(id);
-        if (f == null) throw new java.util.NoSuchElementException("Brak lotu o podanym ID");
-        return f.getDestination();
-    }
-
-    @GetMapping("/{id}/hateoas")
-    public com.example.linielotnicze.dto.FlightDTO getFlightHateoas(@PathVariable Long id) {
-        Flight f = flightService.findById(id);
-        if (f == null) throw new java.util.NoSuchElementException("Brak lotu o podanym ID");
-        return new com.example.linielotnicze.dto.FlightDTO(f);
+        if (f == null) {
+            throw new ResourceNotFoundException("Brak lotu o podanym ID");
+        }
+        if (f.getDestination() == null) {
+            throw new ResourceNotFoundException("Brak lotniska przylotu dla tego lotu");
+        }
+        return new AirportDTO(f.getDestination());
     }
 }

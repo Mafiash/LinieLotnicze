@@ -1,18 +1,21 @@
 package com.example.linielotnicze.service;
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.example.linielotnicze.Passenger;
 import com.example.linielotnicze.repository.PassengerRepository;
 
 @Service
+@RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class PassengerService {
 
-    @Autowired
-    PassengerRepository passengerRepo;
+    private final PassengerRepository passengerRepo;
 
+    @Transactional
     public Passenger save(Passenger passenger) {
         return passengerRepo.save(passenger);
     }
@@ -25,6 +28,7 @@ public class PassengerService {
         return passengerRepo.findAll();
     }
 
+    @Transactional
     public void deleteById(Long id) {
         passengerRepo.deleteById(id);
     }

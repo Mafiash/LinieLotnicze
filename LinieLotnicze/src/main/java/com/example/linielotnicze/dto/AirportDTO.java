@@ -20,10 +20,10 @@ public class AirportDTO extends RepresentationModel<AirportDTO> {
         this.code = airport.getCode();
         this.city = airport.getCity();
 
-        this.add(linkTo(methodOn(AirportController.class).getAirportHateoas(id)).withSelfRel());
+        this.add(linkTo(methodOn(AirportController.class).getAirport(id)).withSelfRel());
         
-        this.add(linkTo(methodOn(FlightController.class).getFlightsByOrigin(city)).withRel("departures"));
-        this.add(linkTo(methodOn(FlightController.class).getFlightsByDestination(city)).withRel("arrivals"));
+        this.add(linkTo(methodOn(FlightController.class).getFlights(city, null, null, null)).withRel("departures"));
+        this.add(linkTo(methodOn(FlightController.class).getFlights(null, city, null, null)).withRel("arrivals"));
     }
 
     public Long getId() { return id; }
