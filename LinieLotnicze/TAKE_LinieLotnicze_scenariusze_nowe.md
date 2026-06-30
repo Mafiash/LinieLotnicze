@@ -2,41 +2,6 @@
 
 Dokument ten przedstawia uaktualnione scenariusze użycia dla systemu rezerwacji linii lotniczych po przeprowadzonej refaktoryzacji API.
 
-## 🔄 Tabela mapowania (Stare vs Nowe API)
-
-| LP | Scenariusz użycia | Stare API (z path-parameter `/search` / `/sorted`) | Nowe API (zgodne z REST i query parameters) |
-|---|---|---|---|
-| 1 | Rezerwacja Lotu | `POST /reservation` | `POST /reservations` |
-| 2 | Modyfikacja Rezerwacji | `PUT /reservation` | `PUT /reservations/{id}` |
-| 3 | Wyświetlenie rezerwacji użytkownika po emailu | `GET /reservation/search/passenger?email=...` | `GET /reservations?email=...` |
-| 4 | Anulowanie rezerwacji | `DELETE /reservation/{id}` | `DELETE /reservations/{id}` |
-| 5 | Wyszukiwarka połączeń | `GET /flight/search/route?origin=...&destination=...` | `GET /flights?origin=...&destination=...` |
-| 6 | Wyszukiwarka lotów do danego miasta | `GET /flight/search/destination?city=...` | `GET /flights?destination=...` |
-| 7 | Szukanie profilu klienta | `GET /passenger/search?lastName=...` | `GET /passengers?lastName=...` |
-| 8 | Lista rezerwacji dla danego lotu | `GET /reservation/search/flight?flightNumber=...` | `GET /reservations?flightNumber=...` |
-| 9 | Szukanie rezerwacji po docelowym miejscu | `GET /reservation/search/destination?city=...` | `GET /reservations?city=...` |
-| 10| Wyświetlenie liczby zajętych miejsc | `GET /reservation/count?flightNumber=...` | `GET /reservations/count?flightNumber=...` |
-| 11| Zmiana samolotu dla danego lotu | `PUT /flight` | `PUT /flights/{id}` |
-| 12| Wyszukiwanie samolotów o min. pojemności | `GET /airplane/search/capacity?minCapacity=...` | `GET /airplanes?minCapacity=...` |
-| 13| Wyszukiwanie odlotów z danego miasta | `GET /flight/search/origin?city=...` | `GET /flights?origin=...` |
-| 14| Sprawdzanie informacji o danym locie | `GET /flight/search/number?flightNumber=...` | `GET /flights?flightNumber=...` |
-| 15| Posortowane loty po dacie wylotu | `GET /flight/sorted` | `GET /flights?sortBy=departureTime` |
-| 16| Posortowane loty z danym miejscem przylotu | `GET /flight/search/destination/sorted?city=...` | `GET /flights?destination=...&sortBy=departureTime` |
-| 17| Wyszukiwanie rodziny samolotów | `GET /airplane/search/model?modelFragment=...` | `GET /airplanes?modelFragment=...` |
-| 18| Samoloty posortowane według wielkości | `GET /airplane/sorted-by-capacity` | `GET /airplanes?sortBy=capacity` |
-| 19| Dobór samolotu odpowiedniej wielkości | `GET /airplane/search/capacity-range?min=...&max=...`| `GET /airplanes?minCapacity=...&maxCapacity=...` |
-| 20| Wyświetlanie danych lotniska po kodzie IATA| `GET /airport/search/code?code=...` | `GET /airports?code=...` |
-| 21| Wyszukiwanie lotnisk w danym mieście | `GET /airport/search/city?city=...` | `GET /airports?city=...` |
-| 22| Lista lotnisk ułożona alfabetycznie | `GET /airport/sorted-by-city` | `GET /airports?sortBy=city` |
-| 23| Wyszukiwanie lotniska po fragmencie nazwy | `GET /airport/search/name?nameFragment=...` | `GET /airports?nameFragment=...` |
-| 24| Wyszukiwanie biletów w zadanej cenie | `GET /reservation/search/price?maxPrice=...` | `GET /reservations?maxPrice=...` |
-| 25| Lista rezerwacji według nazwiska danej osoby | `GET /reservation/search/passenger/lastname?lastName=...` | `GET /reservations?lastName=...` |
-| 26| Lista zarezerwowanych miejsc posortowana | `GET /reservation/search/flight/sorted?flightNumber=...`| `GET /reservations?flightNumber=...&sortBy=seatNumber`|
-| 27| Wyszukiwanie pasażera | `GET /passenger/search/name-or?firstName=...&lastName=...`| `GET /passengers?firstName=...&lastName=...` |
-| 28| Zwracanie profili o danym mailu | `GET /passenger/search/email?emailFragment=...` | `GET /passengers?emailFragment=...` |
-| 29| Wyświetlenie pasażerów posortowanych po nazwisku| `GET /passenger/sorted` | `GET /passengers?sortBy=lastName` |
-
----
 
 ## ⚡ Scenariusze Użycia (1 - 29)
 
