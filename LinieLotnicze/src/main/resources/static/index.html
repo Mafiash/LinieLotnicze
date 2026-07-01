@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LinieLotnicze — Panel API</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body { font-family: system-ui, sans-serif; background: #f4f5f7; color: #1a1a2e; font-size: 14px; }
+
+  header { background: #1a1a2e; color: #fff; padding: 16px 24px; display: flex; align-items: center; gap: 12px; }
+  header h1 { font-size: 18px; font-weight: 600; }
+  header span { background: #3a86ff; color: #fff; padding: 2px 8px; border-radius: 4px; font-size: 12px; }
+
+  nav { background: #fff; border-bottom: 2px solid #e0e0e0; display: flex; gap: 0; padding: 0 24px; }
+  nav button { padding: 12px 18px; border: none; background: none; cursor: pointer; font-size: 13px; font-weight: 500; color: #666; border-bottom: 3px solid transparent; margin-bottom: -2px; transition: color .15s; }
+  nav button:hover { color: #1a1a2e; }
+  nav button.active { color: #3a86ff; border-bottom-color: #3a86ff; }
+
+  main { padding: 24px; max-width: 1200px; margin: 0 auto; }
+
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+  .grid.wide { grid-template-columns: 1fr; }
+
+  .card { background: #fff; border: 1px solid #e0e0e0; border-radius: 8px; padding: 16px; }
+  .card h3 { font-size: 13px; font-weight: 600; color: #666; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #f0f0f0; }
+
+  .form-row { display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+  .form-row input, .form-row select { flex: 1; min-width: 100px; padding: 7px 10px; border: 1px solid #d0d0d0; border-radius: 5px; font-size: 13px; background: #fafafa; }
+  .form-row input:focus, .form-row select:focus { outline: 2px solid #3a86ff; border-color: transparent; background: #fff; }
+  label { display: block; font-size: 11px; color: #888; margin-bottom: 3px; font-weight: 500; }
+  .field { flex: 1; min-width: 100px; }
+
+  button.btn { padding: 7px 16px; border: none; border-radius: 5px; cursor: pointer; font-size: 13px; font-weight: 500; transition: opacity .15s; }
+  button.btn:hover { opacity: .85; }
+  button.btn-primary { background: #3a86ff; color: #fff; }
+  button.btn-success { background: #2ecc71; color: #fff; }
+  button.btn-warning { background: #f39c12; color: #fff; }
+  button.btn-danger  { background: #e74c3c; color: #fff; }
+  button.btn-gray    { background: #95a5a6; color: #fff; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { background: #f8f9fa; padding: 8px 10px; text-align: left; border-bottom: 2px solid #e0e0e0; font-weight: 600; color: #555; white-space: nowrap; }
+  td { padding: 7px 10px; border-bottom: 1px solid #f0f0f0; vertical-align: top; }
+  tr:hover td { background: #f8f9fe; }
+  .table-wrap { overflow-x: auto; }
+
+  .divider { border: none; border-top: 1px solid #f0f0f0; margin: 12px 0; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>LinieLotnicze</h1>
+  <span>REST API Panel</span>
+</header>
+
+<nav id="nav">
+  <button class="active" onclick="switchTab('airplane')">Samoloty</button>
+  <button onclick="switchTab('airport')">Lotniska</button>
+  <button onclick="switchTab('passenger')">Pasażerowie</button>
+  <button onclick="switchTab('flight')">Loty</button>
+  <button onclick="switchTab('reservation')">Rezerwacje</button>
+</nav>
+
+<main>
+
+<!-- ======================== SAMOLOTY ======================== -->
+<div id="tab-airplane" class="tab-content active">
+  <div class="grid">
+    <div class="card">
+      <h3>Pobierz</h3>
+      <button class="btn btn-primary" onclick="getAll('airplane')">Wszystkie</button>
+      <hr class="divider">
+      <div class="form-row">
+        <div class="field"><label>Po ID</label><input type="number" id="airplane-get-id" placeholder="1"></div>
+        <div style="align-self:flex-end"><button class="btn btn-primary" onclick="getById('airplane')">Pobierz</button></div>
+      </div>
+      <hr class="divider">
+      <h3>Szukaj</h3>
+      <div class="form-row">
+        <div class="field"><label>Model</label><input type="text" id="airplane-s-model" placeholder="Boeing"></div>
+        <div class="field"><label>Min. pojemność</label><input type="number" id="airplane-s-min" placeholder="100"></div>
+        <div class="field"><label>Max. pojemność</label><input type="number" id="airplane-s-max" placeholder="300"></div>
+      </div>
+      <div class="form-row">
+        <div class="field"><label>Sortuj po</label>
+          <select id="airplane-s-sortby"><option value="">—</option><option value="model">model</option><option value="capacity">pojemność</option></select>
+        </div>
+        <div class="field"><label>Kierunek</label>
+          <select id="airplane-s-sortdir"><option value="asc">rosnąco</option><option value="desc">malejąco</option></select>
+        </div>
+        <div style="align-self:flex-end"><button class="btn btn-gray" onclick="searchAirplane()">Szukaj</button></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Dodaj</h3>
+      <div class="form-row"><div class="field"><label>Model</label><input type="text" id="airplane-post-model" placeholder="Boeing 737"></div></div>
+      <div class="form-row"><div class="field"><label>Pojemność</label><input type="number" id="airplane-post-cap" placeholder="189"></div></div>
+      <button class="btn btn-success" onclick="postEntity('airplane',{model:v('airplane-post-model'),capacity:vi('airplane-post-cap')})">Dodaj</button>
+      <hr class="divider">
+      <h3>Edytuj</h3>
+      <div class="form-row"><div class="field"><label>ID</label><input type="number" id="airplane-put-id" placeholder="1"></div></div>
+      <div class="form-row"><div class="field"><label>Model</label><input type="text" id="airplane-put-model" placeholder="Boeing 737"></div></div>
+      <div class="form-row"><div class="field"><label>Pojemność</label><input type="number" id="airplane-put-cap" placeholder="189"></div></div>
+      <button class="btn btn-warning" onclick="putEntity('airplane',{id:vi('airplane-put-id'),model:v('airplane-put-model'),capacity:vi('airplane-put-cap')})">Zapisz</button>
+      <hr class="divider">
+      <h3>Usuń</h3>
+      <div class="form-row">
+        <div class="field"><label>ID</label><input type="number" id="airplane-del-id" placeholder="1"></div>
+        <div style="align-self:flex-end"><button class="btn btn-danger" onclick="deleteEntity('airplane')">Usuń</button></div>
+      </div>
+      <hr class="divider">
+      <h3>HATEOAS</h3>
+      <div class="form-row">
+        <div class="field"><label>ID</label><input type="number" id="airplane-hateoas-id" placeholder="1"></div>
+        <div style="align-self:flex-end"><button class="btn btn-gray" onclick="searchTo('airplane','/airplanes/'+v('airplane-hateoas-id'))">Pobierz</button></div>
+      </div>
+    </div>
+  </div>
+  <div class="card grid wide">
+    <h3>Tabela</h3>
+    <div class="table-wrap"><table id="airplane-table"><thead><tr><th>ID</th><th>Model</th><th>Pojemność</th></tr></thead><tbody></tbody></table></div>
+  </div>
+</div>
+
+<!-- ======================== LOTNISKA ======================== -->
+<div id="tab-airport" class="tab-content">
+  <div class="grid">
+    <div class="card">
+      <h3>Pobierz</h3>
+      <button class="btn btn-primary" onclick="getAll('airport')">Wszystkie</button>
+      <hr class="divider">
+      <div class="form-row">
+        <div class="field"><label>Po ID</label><input type="number" id="airport-get-id" placeholder="1"></div>
+        <div style="align-self:flex-end"><button class="btn btn-primary" onclick="getById('airport')">Pobierz</button></div>
+      </div>
+      <hr class="divider">
+      <h3>Szukaj</h3>
+      <div class="form-row">
+        <div class="field"><label>Nazwa</label><input type="text" id="airport-s-name" placeholder="Heathrow"></div>
+        <div class="field"><label>Kod IATA</label><input type="text" id="airport-s-code" placeholder="WAW"></div>
+        <div class="field"><label>Miasto</label><input type="text" id="airport-s-city" placeholder="Londyn"></div>
+      </div>
+      <div class="form-row">
+        <div class="field"><label>Sortuj po</label>
+          <select id="airport-s-sortby"><option value="">—</option><option value="name">nazwa</option><option value="code">kod</option><option value="city">miasto</option></select>
+        </div>
+        <div class="field"><label>Kierunek</label>
+          <select id="airport-s-sortdir"><option value="asc">rosnąco</option><option value="desc">malejąco</option></select>
+        </div>
+        <div style="align-self:flex-end"><button class="btn btn-gray" onclick="searchAirport()">Szukaj</button></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Dodaj</h3>
+      <div class="form-row"><div class="field"><label>Nazwa</label><input type="text" id="airport-post-name" placeholder="Lotnisko Chopina"></div></div>
+      <div class="form-row"><div class="field"><label>Kod IATA</label><input type="text" id="airport-post-code" placeholder="WAW"></div></div>
+      <div class="form-row"><div class="field"><label>Miasto</label><input type="text" id="airport-post-city" placeholder="Warszawa"></div></div>
+      <button class="btn btn-success" onclick="postEntity('airport',{name:v('airport-post-name'),code:v('airport-post-code'),city:v('airport-post-city')})">Dodaj</button>
+      <hr class="divider">
+      <h3>Edytuj</h3>
+      <div class="form-row"><div class="field"><label>ID</label><input type="number" id="airport-put-id" placeholder="1"></div></div>
+      <div class="form-row"><div class="field"><label>Nazwa</label><input type="text" id="airport-put-name" placeholder="Lotnisko Chopina"></div></div>
+      <div class="form-row"><div class="field"><label>Kod IATA</label><input type="text" id="airport-put-code" placeholder="WAW"></div></div>
+      <div class="form-row"><div class="field"><label>Miasto</label><input type="text" id="airport-put-city" placeholder="Warszawa"></div></div>
+      <button class="btn btn-warning" onclick="putEntity('airport',{id:vi('airport-put-id'),name:v('airport-put-name'),code:v('airport-put-code'),city:v('airport-put-city')})">Zapisz</button>
+      <hr class="divider">
+      <h3>Usuń</h3>
+      <div class="form-row">
+        <div class="field"><label>ID</label><input type="number" id="airport-del-id" placeholder="1"></div>
+        <div style="align-self:flex-end"><button class="btn btn-danger" onclick="deleteEntity('airport')">Usuń</button></div>
+      </div>
+      <hr class="divider">
+      <h3>HATEOAS</h3>
+      <div class="form-row">
+        <div class="field"><label>ID</label><input type="number" id="airport-hateoas-id" placeholder="1"></div>
+        <div style="align-self:flex-end"><button class="btn btn-gray" onclick="searchTo('airport','/airports/'+v('airport-hateoas-id'))">Pobierz</button></div>
+      </div>
+    </div>
+  </div>
+  <div class="card grid wide">
+    <h3>Tabela</h3>
+    <div class="table-wrap"><table id="airport-table"><thead><tr><th>ID</th><th>Nazwa</th><th>Kod</th><th>Miasto</th></tr></thead><tbody></tbody></table></div>
+  </div>
+</div>
+
+<!-- ======================== PASAŻEROWIE ======================== -->
+<div id="tab-passenger" class="tab-content">
+  <div class="grid">
+    <div class="card">
+      <h3>Pobierz</h3>
+      <button class="btn btn-primary" onclick="getAll('passenger')">Wszyscy</button>
+      <hr class="divider">
+      <div class="form-row">
+        <div class="field"><label>Po ID</label><input type="number" id="passenger-get-id" placeholder="1"></div>
+        <div style="align-self:flex-end"><button class="btn btn-primary" onclick="getById('passenger')">Pobierz</button></div>
+      </div>
+      <hr class="divider">
+      <h3>Szukaj</h3>
+      <div class="form-row">
+        <div class="field"><label>Imię</label><input type="text" id="passenger-s-first" placeholder="Jan"></div>
+        <div class="field"><label>Nazwisko</label><input type="text" id="passenger-s-last" placeholder="Kowalski"></div>
+        <div class="field"><label>E-mail</label><input type="text" id="passenger-s-email" placeholder="test.pl"></div>
+      </div>
+      <div class="form-row">
+        <div class="field"><label>Sortuj po</label>
+          <select id="passenger-s-sortby"><option value="">—</option><option value="firstName">imię</option><option value="lastName">nazwisko</option><option value="email">email</option></select>
+        </div>
+        <div class="field"><label>Kierunek</label>
+          <select id="passenger-s-sortdir"><option value="asc">rosnąco</option><option value="desc">malejąco</option></select>
+        </div>
+        <div style="align-self:flex-end"><button class="btn btn-gray" onclick="searchPassenger()">Szukaj</button></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Dodaj</h3>
+      <div class="form-row"><div class="field"><label>Imię</label><input type="text" id="passenger-post-first" placeholder="Jan"></div></div>
+      <div class="form-row"><div class="field"><label>Nazwisko</label><input type="text" id="passenger-post-last" placeholder="Kowalski"></div></div>
+      <div class="form-row"><div class="field"><label>E-mail</label><input type="text" id="passenger-post-email" placeholder="jan@test.pl"></div></div>
+      <button class="btn btn-success" onclick="postEntity('passenger',{firstName:v('passenger-post-first'),lastName:v('passenger-post-last'),email:v('passenger-post-email')})">Dodaj</button>
+      <hr class="divider">
+      <h3>Edytuj</h3>
+      <div class="form-row"><div class="field"><label>ID</label><input type="number" id="passenger-put-id" placeholder="1"></div></div>
+      <div class="form-row"><div class="field"><label>Imię</label><input type="text" id="passenger-put-first" placeholder="Jan"></div></div>
+      <div class="form-row"><div class="field"><label>Nazwisko</label><input type="text" id="passenger-put-last" placeholder="Kowalski"></div></div>
+      <div class="form-row"><div class="field"><label>E-mail</label><input type="text" id="passenger-put-email" placeholder="jan@test.pl"></div></div>
+      <button class="btn btn-warning" onclick="putEntity('passenger',{id:vi('passenger-put-id'),firstName:v('passenger-put-first'),lastName:v('passenger-put-last'),email:v('passenger-put-email')})">Zapisz</button>
+      <hr class="divider">
+      <h3>Usuń</h3>
+      <div class="form-row">
+        <div class="field"><label>ID</label><input type="number" id="passenger-del-id" placeholder="1"></div>
+        <div style="align-self:flex-end"><button class="btn btn-danger" onclick="deleteEntity('passenger')">Usuń</button></div>
+      </div>
+      <hr class="divider">
+      <h3>HATEOAS</h3>
+      <div class="form-row">
+        <div class="field"><label>ID</label><input type="number" id="passenger-hateoas-id" placeholder="1"></div>
+        <div style="align-self:flex-end"><button class="btn btn-gray" onclick="searchTo('passenger','/passengers/'+v('passenger-hateoas-id'))">Pobierz</button></div>
+      </div>
+    </div>
+  </div>
+  <div class="card grid wide">
+    <h3>Tabela</h3>
+    <div class="table-wrap"><table id="passenger-table"><thead><tr><th>ID</th><th>Imię</th><th>Nazwisko</th><th>E-mail</th></tr></thead><tbody></tbody></table></div>
+  </div>
+</div>
+
+<!-- ======================== LOTY ======================== -->
+<div id="tab-flight" class="tab-content">
+  <div class="grid">
+    <div class="card">
+      <h3>Pobierz</h3>
+      <button class="btn btn-primary" onclick="getAll('flight')">Wszystkie</button>
+      <hr class="divider">
+      <div class="form-row">
+        <div class="field"><label>Po ID</label><input type="number" id="flight-get-id" placeholder="1"></div>
+        <div style="align-self:flex-end"><button class="btn btn-primary" onclick="getById('flight')">Pobierz</button></div>
+      </div>
+      <hr class="divider">
+      <h3>Szukaj</h3>
+      <div class="form-row">
+        <div class="field"><label>Numer lotu</label><input type="text" id="flight-s-num" placeholder="LO123"></div>
+        <div class="field"><label>Miasto wylotu</label><input type="text" id="flight-s-origin" placeholder="Warszawa"></div>
+        <div class="field"><label>Miasto docelowe</label><input type="text" id="flight-s-dest" placeholder="Londyn"></div>
+      </div>
+      <div class="form-row">
+        <div class="field"><label>Sortuj po</label>
+          <select id="flight-s-sortby"><option value="">—</option><option value="departureTime">odlot</option><option value="arrivalTime">przylot</option><option value="flightNumber">numer</option></select>
+        </div>
+        <div class="field"><label>Kierunek</label>
+          <select id="flight-s-sortdir"><option value="asc">rosnąco</option><option value="desc">malejąco</option></select>
+        </div>
+        <div style="align-self:flex-end"><button class="btn btn-gray" onclick="searchFlight()">Szukaj</button></div>
+      </div>
+      <hr class="divider">
+      <h3>Powiązane zasoby</h3>
+      <div class="form-row">
+        <div class="field"><label>ID lotu</label><input type="number" id="flight-rel-id" placeholder="1"></div>
+      </div>
+      <div class="form-row" style="gap:6px">
+        <button class="btn btn-gray" onclick="searchTo('airplane','/flights/'+v('flight-rel-id')+'/airplane')">Samolot</button>
+        <button class="btn btn-gray" onclick="searchTo('airport','/flights/'+v('flight-rel-id')+'/origin')">Skąd</button>
+        <button class="btn btn-gray" onclick="searchTo('airport','/flights/'+v('flight-rel-id')+'/destination')">Dokąd</button>
+        <button class="btn btn-gray" onclick="searchTo('flight','/flights/'+v('flight-rel-id'))">HATEOAS</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Dodaj</h3>
+      <div class="form-row"><div class="field"><label>Numer lotu</label><input type="text" id="flight-post-num" placeholder="LO999"></div></div>
+      <div class="form-row"><div class="field"><label>Odlot (yyyy-MM-ddTHH:mm:ss)</label><input type="text" id="flight-post-dep" placeholder="2026-07-01T10:00:00"></div></div>
+      <div class="form-row"><div class="field"><label>Przylot</label><input type="text" id="flight-post-arr" placeholder="2026-07-01T12:00:00"></div></div>
+      <div class="form-row"><div class="field"><label>ID samolotu</label><input type="number" id="flight-post-plane" placeholder="1"></div></div>
+      <div class="form-row"><div class="field"><label>ID lotniska wylotu</label><input type="number" id="flight-post-orig" placeholder="1"></div></div>
+      <div class="form-row"><div class="field"><label>ID lotniska docelowego</label><input type="number" id="flight-post-dest" placeholder="2"></div></div>
+      <button class="btn btn-success" onclick="postEntity('flight',{flightNumber:v('flight-post-num'),departureTime:v('flight-post-dep'),arrivalTime:v('flight-post-arr'),airplane:{id:vi('flight-post-plane')},origin:{id:vi('flight-post-orig')},destination:{id:vi('flight-post-dest')}})">Dodaj</button>
+      <hr class="divider">
+      <h3>Edytuj</h3>
+      <div class="form-row"><div class="field"><label>ID</label><input type="number" id="flight-put-id" placeholder="1"></div></div>
+      <div class="form-row"><div class="field"><label>Numer lotu</label><input type="text" id="flight-put-num" placeholder="LO123"></div></div>
+      <div class="form-row"><div class="field"><label>Odlot (yyyy-MM-ddTHH:mm:ss)</label><input type="text" id="flight-put-dep" placeholder="2026-05-15T10:30:00"></div></div>
+      <div class="form-row"><div class="field"><label>Przylot</label><input type="text" id="flight-put-arr" placeholder="2026-05-15T12:05:00"></div></div>
+      <div class="form-row"><div class="field"><label>ID samolotu</label><input type="number" id="flight-put-plane" placeholder="1"></div></div>
+      <div class="form-row"><div class="field"><label>ID lotniska wylotu</label><input type="number" id="flight-put-orig" placeholder="1"></div></div>
+      <div class="form-row"><div class="field"><label>ID lotniska docelowego</label><input type="number" id="flight-put-dest" placeholder="2"></div></div>
+      <button class="btn btn-warning" onclick="putEntity('flight',{id:vi('flight-put-id'),flightNumber:v('flight-put-num'),departureTime:v('flight-put-dep'),arrivalTime:v('flight-put-arr'),airplane:{id:vi('flight-put-plane')},origin:{id:vi('flight-put-orig')},destination:{id:vi('flight-put-dest')}})">Zapisz</button>
+      <hr class="divider">
+      <h3>Usuń</h3>
+      <div class="form-row">
+        <div class="field"><label>ID</label><input type="number" id="flight-del-id" placeholder="1"></div>
+        <div style="align-self:flex-end"><button class="btn btn-danger" onclick="deleteEntity('flight')">Usuń</button></div>
+      </div>
+    </div>
+  </div>
+  <div class="card grid wide">
+    <h3>Tabela</h3>
+    <div class="table-wrap"><table id="flight-table"><thead><tr><th>ID</th><th>Numer</th><th>Odlot</th><th>Przylot</th><th>Skąd</th><th>Dokąd</th><th>Samolot</th></tr></thead><tbody></tbody></table></div>
+  </div>
+</div>
+
+<!-- ======================== REZERWACJE ======================== -->
+<div id="tab-reservation" class="tab-content">
+  <div class="grid">
+    <div class="card">
+      <h3>Pobierz</h3>
+      <button class="btn btn-primary" onclick="getAll('reservation')">Wszystkie</button>
+      <hr class="divider">
+      <div class="form-row">
+        <div class="field"><label>Po ID</label><input type="number" id="reservation-get-id" placeholder="1"></div>
+        <div style="align-self:flex-end"><button class="btn btn-primary" onclick="getById('reservation')">Pobierz</button></div>
+      </div>
+      <hr class="divider">
+      <h3>Szukaj</h3>
+      <div class="form-row">
+        <div class="field"><label>Numer lotu</label><input type="text" id="res-s-flight" placeholder="LO123"></div>
+        <div class="field"><label>Miasto docelowe</label><input type="text" id="res-s-dest" placeholder="Londyn"></div>
+      </div>
+      <div class="form-row">
+        <div class="field"><label>E-mail pasażera</label><input type="text" id="res-s-email" placeholder="jan.kowalski@test.pl"></div>
+        <div class="field"><label>Nazwisko pasażera</label><input type="text" id="res-s-last" placeholder="Kowalski"></div>
+        <div class="field"><label>Cena maks. (zł)</label><input type="number" id="res-s-price" placeholder="200"></div>
+      </div>
+      <div class="form-row">
+        <div class="field"><label>Sortuj po</label>
+          <select id="res-s-sortby"><option value="">—</option><option value="seatNumber">fotel</option><option value="price">cena</option></select>
+        </div>
+        <div class="field"><label>Kierunek</label>
+          <select id="res-s-sortdir"><option value="asc">rosnąco</option><option value="desc">malejąco</option></select>
+        </div>
+        <div style="align-self:flex-end"><button class="btn btn-gray" onclick="searchReservation()">Szukaj</button></div>
+      </div>
+      <div class="form-row">
+        <div class="field"><label>Zlicz rezerwacje na locie</label><input type="text" id="res-count" placeholder="LO123"></div>
+        <div style="align-self:flex-end"><button class="btn btn-gray" onclick="countFlight()">Zlicz</button></div>
+      </div>
+      <hr class="divider">
+      <h3>Powiązane zasoby</h3>
+      <div class="form-row">
+        <div class="field"><label>ID rezerwacji</label><input type="number" id="res-rel-id" placeholder="1"></div>
+      </div>
+      <div class="form-row" style="gap:6px">
+        <button class="btn btn-gray" onclick="searchTo('passenger','/reservations/'+v('res-rel-id')+'/passenger')">Pasażer</button>
+        <button class="btn btn-gray" onclick="searchTo('flight','/reservations/'+v('res-rel-id')+'/flight')">Lot</button>
+        <button class="btn btn-gray" onclick="searchTo('reservation','/reservations/'+v('res-rel-id'))">HATEOAS</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Dodaj</h3>
+      <div class="form-row"><div class="field"><label>Numer fotela</label><input type="text" id="res-post-seat" placeholder="7C"></div></div>
+      <div class="form-row"><div class="field"><label>Cena (zł)</label><input type="number" id="res-post-price" placeholder="320.00" step="0.01"></div></div>
+      <div class="form-row"><div class="field"><label>ID pasażera</label><input type="number" id="res-post-pass" placeholder="2"></div></div>
+      <div class="form-row"><div class="field"><label>ID lotu</label><input type="number" id="res-post-flight" placeholder="1"></div></div>
+      <button class="btn btn-success" onclick="postEntity('reservation',{seatNumber:v('res-post-seat'),price:parseFloat(v('res-post-price')),passenger:{id:vi('res-post-pass')},flight:{id:vi('res-post-flight')}})">Dodaj</button>
+      <hr class="divider">
+      <h3>Edytuj</h3>
+      <div class="form-row"><div class="field"><label>ID</label><input type="number" id="res-put-id" placeholder="1"></div></div>
+      <div class="form-row"><div class="field"><label>Numer fotela</label><input type="text" id="res-put-seat" placeholder="12A"></div></div>
+      <div class="form-row"><div class="field"><label>Cena (zł)</label><input type="number" id="res-put-price" placeholder="450.00" step="0.01"></div></div>
+      <div class="form-row"><div class="field"><label>ID pasażera</label><input type="number" id="res-put-pass" placeholder="1"></div></div>
+      <div class="form-row"><div class="field"><label>ID lotu</label><input type="number" id="res-put-flight" placeholder="1"></div></div>
+      <button class="btn btn-warning" onclick="putEntity('reservation',{id:vi('res-put-id'),seatNumber:v('res-put-seat'),price:parseFloat(v('res-put-price')),passenger:{id:vi('res-put-pass')},flight:{id:vi('res-put-flight')}})">Zapisz</button>
+      <hr class="divider">
+      <h3>Usuń</h3>
+      <div class="form-row">
+        <div class="field"><label>ID</label><input type="number" id="reservation-del-id" placeholder="1"></div>
+        <div style="align-self:flex-end"><button class="btn btn-danger" onclick="deleteEntity('reservation')">Usuń</button></div>
+      </div>
+    </div>
+  </div>
+  <div class="card grid wide">
+    <h3>Tabela</h3>
+    <div class="table-wrap"><table id="reservation-table"><thead><tr><th>ID</th><th>Fotel</th><th>Cena (zł)</th><th>Pasażer</th><th>Lot</th></tr></thead><tbody></tbody></table></div>
+  </div>
+</div>
+
+</main>
+
+<script>
+const v  = id => document.getElementById(id)?.value ?? '';
+const vi = id => parseInt(v(id)) || null;
+
+const entityPlural = {
+  airplane: 'airplanes',
+  airport: 'airports',
+  passenger: 'passengers',
+  flight: 'flights',
+  reservation: 'reservations'
+};
+const getPath = (entity) => '/' + (entityPlural[entity] || entity);
+
+function switchTab(name) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  event.target.classList.add('active');
+}
+
+async function apiFetch(path, options = {}) {
+  const res = await fetch(path, options);
+  const text = await res.text();
+  let data = null;
+  try { data = JSON.parse(text); } catch {}
+  return { ok: res.ok, status: res.status, data };
+}
+
+async function getAll(entity) {
+  const r = await apiFetch(getPath(entity));
+  if (r.ok) renderTable(entity, r.data);
+}
+
+async function getById(entity) {
+  const id = vi(entity + '-get-id');
+  if (!id) return;
+  const r = await apiFetch(getPath(entity) + '/' + id);
+  if (r.ok) renderTable(entity, r.data);
+}
+
+async function searchTo(entity, url) {
+  const r = await apiFetch(url);
+  if (r.ok) renderTable(entity, r.data);
+}
+
+async function postEntity(entity, body) {
+  await apiFetch(getPath(entity), {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(body)
+  });
+  getAll(entity);
+}
+
+async function putEntity(entity, body) {
+  await apiFetch(getPath(entity) + '/' + body.id, {
+    method: 'PUT',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(body)
+  });
+  getAll(entity);
+}
+
+async function deleteEntity(entity) {
+  const id = vi(entity + '-del-id');
+  if (!id) return;
+  if (!confirm(`Usunąć ${entity} ID=${id}?`)) return;
+  await apiFetch(getPath(entity) + '/' + id, { method: 'DELETE' });
+  getAll(entity);
+}
+
+function buildQuery(params) {
+  const qs = Object.entries(params)
+    .filter(([, val]) => val !== null && val !== undefined && val !== '')
+    .map(([k, val]) => `${encodeURIComponent(k)}=${encodeURIComponent(val)}`)
+    .join('&');
+  return qs ? '?' + qs : '';
+}
+
+function searchAirplane() {
+  searchTo('airplane', '/airplanes' + buildQuery({
+    modelFragment: v('airplane-s-model'), minCapacity: v('airplane-s-min'),
+    maxCapacity: v('airplane-s-max'), sortBy: v('airplane-s-sortby')
+  }));
+}
+function searchAirport() {
+  searchTo('airport', '/airports' + buildQuery({
+    nameFragment: v('airport-s-name'), code: v('airport-s-code'),
+    city: v('airport-s-city'), sortBy: v('airport-s-sortby')
+  }));
+}
+function searchPassenger() {
+  searchTo('passenger', '/passengers' + buildQuery({
+    firstName: v('passenger-s-first'), lastName: v('passenger-s-last'),
+    emailFragment: v('passenger-s-email'), sortBy: v('passenger-s-sortby')
+  }));
+}
+function searchFlight() {
+  searchTo('flight', '/flights' + buildQuery({
+    flightNumber: v('flight-s-num'), origin: v('flight-s-origin'),
+    destination: v('flight-s-dest'), sortBy: v('flight-s-sortby')
+  }));
+}
+function searchReservation() {
+  searchTo('reservation', '/reservations' + buildQuery({
+    flightNumber: v('res-s-flight'), city: v('res-s-dest'),
+    email: v('res-s-email'), lastName: v('res-s-last'),
+    maxPrice: v('res-s-price'), sortBy: v('res-s-sortby')
+  }));
+}
+
+async function countFlight() {
+  const fn = v('res-count');
+  if (!fn) return;
+  const r = await apiFetch('/reservations/count?flightNumber=' + fn);
+  if (r.ok) alert(`Liczba rezerwacji na locie ${fn}: ${r.data}`);
+}
+
+function renderTable(entity, data) {
+  const tbody = document.querySelector('#' + entity + '-table tbody');
+  if (!tbody) return;
+  const rows = Array.isArray(data) ? data : [data];
+  tbody.innerHTML = rows.map(r => rowHtml(entity, r)).join('');
+}
+
+function rowHtml(entity, r) {
+  switch (entity) {
+    case 'airplane':
+      return `<tr><td>${r.id}</td><td>${r.model}</td><td>${r.capacity}</td></tr>`;
+    case 'airport':
+      return `<tr><td>${r.id}</td><td>${r.name}</td><td>${r.code}</td><td>${r.city}</td></tr>`;
+    case 'passenger':
+      return `<tr><td>${r.id}</td><td>${r.firstName}</td><td>${r.lastName}</td><td>${r.email}</td></tr>`;
+    case 'flight':
+      return `<tr><td>${r.id}</td><td>${r.flightNumber}</td><td>${fmt(r.departureTime)}</td><td>${fmt(r.arrivalTime)}</td><td>${r.origin?.city} (${r.origin?.code})</td><td>${r.destination?.city} (${r.destination?.code})</td><td>${r.airplane?.model}</td></tr>`;
+    case 'reservation':
+      return `<tr><td>${r.id}</td><td>${r.seatNumber}</td><td>${r.price?.toFixed(2)}</td><td>${r.passenger?.firstName} ${r.passenger?.lastName}</td><td>${r.flight?.flightNumber}</td></tr>`;
+    default: return '';
+  }
+}
+
+function fmt(dt) {
+  if (!dt) return '';
+  return dt.replace('T', ' ').slice(0, 16);
+}
+
+window.addEventListener('load', () => {
+  ['airplane','airport','passenger','flight','reservation'].forEach(getAll);
+});
+</script>
+</body>
+</html>
