@@ -1,6 +1,8 @@
 package com.example.linielotnicze.dto;
 
 import com.example.linielotnicze.Reservation;
+import com.example.linielotnicze.Passenger;
+import com.example.linielotnicze.Flight;
 import com.example.linielotnicze.controller.ReservationController;
 import org.springframework.hateoas.RepresentationModel;
 
@@ -11,11 +13,15 @@ public class ReservationDTO extends RepresentationModel<ReservationDTO> {
     private Long id;
     private String seatNumber;
     private Double price;
+    private Passenger passenger;
+    private Flight flight;
 
     public ReservationDTO(Reservation reservation) {
         this.id = reservation.getId();
         this.seatNumber = reservation.getSeatNumber();
         this.price = reservation.getPrice();
+        this.passenger = reservation.getPassenger();
+        this.flight = reservation.getFlight();
 
         this.add(linkTo(methodOn(ReservationController.class).getPassengerForReservation(id)).withRel("passenger"));
         this.add(linkTo(methodOn(ReservationController.class).getFlightForReservation(id)).withRel("flight"));
@@ -25,4 +31,6 @@ public class ReservationDTO extends RepresentationModel<ReservationDTO> {
     public Long getId() { return id; }
     public String getSeatNumber() { return seatNumber; }
     public Double getPrice() { return price; }
+    public Passenger getPassenger() { return passenger; }
+    public Flight getFlight() { return flight; }
 }

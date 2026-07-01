@@ -1,6 +1,8 @@
 package com.example.linielotnicze.dto;
 
 import com.example.linielotnicze.Flight;
+import com.example.linielotnicze.Airport;
+import com.example.linielotnicze.Airplane;
 import com.example.linielotnicze.controller.FlightController;
 import org.springframework.hateoas.RepresentationModel;
 
@@ -15,12 +17,18 @@ public class FlightDTO extends RepresentationModel<FlightDTO> {
     private String flightNumber;
     private LocalDateTime departureTime;
     private LocalDateTime arrivalTime;
+    private Airport origin;
+    private Airport destination;
+    private Airplane airplane;
 
     public FlightDTO(Flight flight) {
         this.id = flight.getId();
         this.flightNumber = flight.getFlightNumber();
         this.departureTime = flight.getDepartureTime();
         this.arrivalTime = flight.getArrivalTime();
+        this.origin = flight.getOrigin();
+        this.destination = flight.getDestination();
+        this.airplane = flight.getAirplane();
 
         this.add(linkTo(methodOn(FlightController.class).getAirplaneForFlight(id)).withRel("airplane"));
         this.add(linkTo(methodOn(FlightController.class).getOriginForFlight(id)).withRel("origin"));
@@ -33,4 +41,7 @@ public class FlightDTO extends RepresentationModel<FlightDTO> {
     public String getFlightNumber() { return flightNumber; }
     public LocalDateTime getDepartureTime() { return departureTime; }
     public LocalDateTime getArrivalTime() { return arrivalTime; }
+    public Airport getOrigin() { return origin; }
+    public Airport getDestination() { return destination; }
+    public Airplane getAirplane() { return airplane; }
 }
